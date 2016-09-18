@@ -3,7 +3,10 @@ package com.lastdown.deviceapp.deviceapp;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,6 +21,7 @@ public class GridActivity extends AppCompatActivity {
     private GridView gridView;
     private GridAdapter adapter;
     private List<GridItem> items;
+    private GridItem clickedItem;
 
     private EditText editText;
     private Spinner spinner;
@@ -41,6 +45,16 @@ public class GridActivity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.editText);
         spinner = (Spinner) findViewById(R.id.spinner);
         button = (Button) findViewById(R.id.button);
+
+        registerForContextMenu(gridView);
+
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() { @Override
+
+        public boolean onItemLongClick(AdapterView<?> av, View v, int pos, long id) {
+
+            return onLongListItemClick(v,pos,id); }
+
+        });
 
         //Create the spinner items
         String[] spinnerItems = {"laptop", "phone"};
@@ -84,4 +98,46 @@ public class GridActivity extends AppCompatActivity {
             }
         });
     }
+
+    protected boolean onLongListItemClick(View v, int pos, long id) {
+
+        clickedItem = (GridItem) adapter.getItem(pos); //Retrieve the (custom) item that the user clicked
+        return false; //'False' means that Android will call other routines in the long click handling flow
+        //in this case onCreateContextMenu
+
+    }
+
+    @Override
+
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+
+        //Inflate the context menu from the resource file
+        getMenuInflater().inflate(R.menu.context_menu, menu);
+        //Find the delete MenuItem by its ID
+        MenuItem deleteButton = menu.findItem(R.id.context_menu_delete_item);
+        //Get the title from the menu button
+        String originalTitle = deleteButton.getTitle().toString();
+        //Make a new title combining the original title and the name of the clicked list item
+        deleteButton.setTitle(originalTitle + " '" + clickedItem.getTitle() + "'?"); //NEW
+        //Let Android do its magic
+        super.onCreateContextMenu(menu, view, menuInfo);
+
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+
+        //Retrieve info about the long pressed list item
+        AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        if (item.getItemId() == R.id.context_menu_delete_item) {
+            //Remove the item from the list
+            items.remove(itemInfo.position);
+            //Update the adapter to reflect the list change
+            adapter.notifyDataSetChanged();
+            return true;
+        }
+        return super.onContextItemSelected(item);
+
+    }
+
 }
