@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Device App</string>
+    <string name="text_message_above_gird">Keep pressed to remove single entry</string>
 </resources>
